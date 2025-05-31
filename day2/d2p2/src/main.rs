@@ -31,7 +31,9 @@ fn main() -> Result<()> {
                     }
                 }
             },
-            None => safe += 1,
+            None => {
+                safe += 1;
+            }
         } 
     }
 

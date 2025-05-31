@@ -33,7 +33,6 @@ fn main() -> Result<()> {
                 // If removing one value still results in an error then report is unsafe
                 if removed_ind_zero_err == None || 
                     removed_ind_one_err == None {
-                    println!("report: {:?} safe", report);
                     safe += 1;
                 }
             },
@@ -55,22 +54,24 @@ fn main() -> Result<()> {
                 if removed_ind_zero_err == None || 
                     removed_ind_one_err == None || 
                     removed_ind_two_err == None {
-                    println!("report: {:?} safe", report);
                     safe += 1;
                 }
             },
             Some(n) => {
-                let mut report_removed_ind = report.clone();
-                report_removed_ind.remove(n as usize);
-                let removed_ind_err = process_report(&report_removed_ind);
+                let mut report_removed_ind_n = report.clone();
+                report_removed_ind_n.remove(n as usize);
+                let removed_ind_n_err = process_report(&report_removed_ind_n);
 
-                if removed_ind_err == None {
-                    println!("report: {:?} safe", report);
+                let mut report_removed_ind_n_minus_1 = report.clone();
+                report_removed_ind_n_minus_1.remove((n-1) as usize);
+                let removed_ind_n_minus_one_err = process_report(&report_removed_ind_n_minus_1);
+
+                if removed_ind_n_err == None ||
+                    removed_ind_n_minus_one_err == None {
                     safe += 1;
                 }
             },
             None => {
-                println!("report: {:?} safe", report);
                 safe += 1;
             },
         } 
