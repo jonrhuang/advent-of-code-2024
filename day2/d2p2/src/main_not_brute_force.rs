@@ -18,20 +18,61 @@ fn main() -> Result<()> {
 
         let error: Option<i32> = process_report(&report);
         
+        // If fails once, then dampen by removing one value and testing again
         match error {
-            // If failed once, test every iteration with one value removed
-            Some(_i) => {
-                for n in 0..report.len() {
-                    let mut new_report = report.clone();
-                    new_report.remove(n);
-                    let second_error = process_report(&new_report);
-                    if second_error == None {
-                        safe += 1;
-                        break;
-                    }
+            // Error in index 1, can either remove 0th or 1st to dampen
+            Some(1) => {
+                let mut report_removed_ind_zero = report.clone();
+                report_removed_ind_zero.remove(0);
+                let removed_ind_zero_err = process_report(&report_removed_ind_zero);
+
+                let mut report_removed_ind_one = report.clone();
+                report_removed_ind_one.remove(1);
+                let removed_ind_one_err = process_report(&report_removed_ind_one);
+
+                // If removing one value still results in an error then report is unsafe
+                if removed_ind_zero_err == None || 
+                    removed_ind_one_err == None {
+                    println!("report: {:?} safe", report);
+                    safe += 1;
                 }
             },
-            None => safe += 1,
+            // Error in index 2, can either remove 0th or 1st (meaning 0 to 1 set incorrect ascending rule)
+            //                                     2nd (meaning 2 can be removed) 
+            Some(2) => {
+                let mut report_removed_ind_zero = report.clone();
+                report_removed_ind_zero.remove(0);
+                let removed_ind_zero_err = process_report(&report_removed_ind_zero);
+
+                let mut report_removed_ind_one = report.clone();
+                report_removed_ind_one.remove(1);
+                let removed_ind_one_err = process_report(&report_removed_ind_one);
+
+                let mut report_removed_ind_two = report.clone();
+                report_removed_ind_two.remove(2);
+                let removed_ind_two_err = process_report(&report_removed_ind_two);
+
+                if removed_ind_zero_err == None || 
+                    removed_ind_one_err == None || 
+                    removed_ind_two_err == None {
+                    println!("report: {:?} safe", report);
+                    safe += 1;
+                }
+            },
+            Some(n) => {
+                let mut report_removed_ind = report.clone();
+                report_removed_ind.remove(n as usize);
+                let removed_ind_err = process_report(&report_removed_ind);
+
+                if removed_ind_err == None {
+                    println!("report: {:?} safe", report);
+                    safe += 1;
+                }
+            },
+            None => {
+                println!("report: {:?} safe", report);
+                safe += 1;
+            },
         } 
     }
 
@@ -40,6 +81,7 @@ fn main() -> Result<()> {
 }
 
 fn process_report(report: &Vec<i32>) -> Option<i32> {
+    // println!("\n\nProcessing report: {:?}", report);
     let mut ascend_flag: Option<AscendType> = None;
     let mut last_number: Option<i32> = None;
     for (index, num) in report.into_iter().enumerate() {
@@ -48,6 +90,7 @@ fn process_report(report: &Vec<i32>) -> Option<i32> {
             Some(rule) => {
                 let safe = levels_check(rule, last_number.unwrap(), current_number);
                 if safe == false {
+                    // println!("returning!! last num: {}. current num: {}. current index: {}", last_number.unwrap(), current_number, index);
                     return Some(index as i32);
                 }
                 else {
@@ -60,16 +103,24 @@ fn process_report(report: &Vec<i32>) -> Option<i32> {
                     last_number = Some(current_number);
                     continue;
                 }
-                if current_number - last_number.unwrap() > 3 || last_number.unwrap() - current_number > 3 {
-                    return Some(index as i32)
-                }
-                else if current_number > last_number.unwrap() {
+                if current_number > last_number.unwrap() {
+                    if current_number - last_number.unwrap() > 3 {
+                        // println!("returning!! last num: {}. current num: {}. current index: {}", last_number.unwrap(), current_number, index);
+                        return Some(index as i32)
+                    }
+                    // println!("setting ascend flag to ascending");
                     ascend_flag = Some(AscendType::Ascending);
                 }
                 else if current_number < last_number.unwrap() {
+                    if last_number.unwrap() - current_number > 3 {
+                        // println!("returning!! last num: {}. current num: {}. current index: {}", last_number.unwrap(), current_number, index);
+                        return Some(index as i32)
+                    }
+                    // println!("setting ascend flag to descending");
                     ascend_flag = Some(AscendType::Descending);
                 }
                 else {
+                    // println!("returning!! last num: {}. current num: {}. current index: {}", last_number.unwrap(), current_number, index);
                     return Some(index as i32);
                 }
                 last_number = Some(current_number);
@@ -77,6 +128,7 @@ fn process_report(report: &Vec<i32>) -> Option<i32> {
             },
         }
     }
+    // println!("Safe!");
     return None;
 }
 
